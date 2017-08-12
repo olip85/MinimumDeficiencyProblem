@@ -16,15 +16,24 @@ set of int: COLORS0 = 0..num_vertices;
 
 array[VERTICES, VERTICES] of 0..1: adj_matrix;
 
+% Decision variables
+array[VERTICES, VERTICES] of var COLORS0: edges_cols;
+
 % Auxiliary variables
 array[VERTICES] of var int: incident;
 constraint forall(v in VERTICES)(
   incident[v] = sum(row(adj_matrix, v))
 );
 
-% Decision variables
-array[VERTICES, VERTICES] of var COLORS0: edges_cols;
- 
+array[VERTICES] of var int: min_col;
+constraint forall(v in VERTICES)(
+  min_col[v] = min([row(edges_cols, v)[i] | i in VERTICES where row(adj_matrix, v)[i] != 0])
+);
+
+array[VERTICES] of var int: max_col;
+constraint forall(v in VERTICES)(
+  max_col[v] = max(row(edges_cols, v))
+);
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Constraints
@@ -54,10 +63,7 @@ constraint forall(v1, v2 in VERTICES)(
 % Objectives
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-var int: obj =
-  sum(v in VERTICES)(
-    max(row(edges_cols, v)) - min([row(edges_cols, v)[i] | i in VERTICES where row(adj_matrix, v)[i] != 0]) + 1 - incident[v]
-  );
+var int: obj = sum(v in VERTICES)(max_col[v] - min_col[v] + 1 - incident[v]);
 
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
